@@ -2,7 +2,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessions'
-import BaseButton from '@/components/common/BaseButton.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 import BasePagination from '@/components/common/BasePagination.vue'
 import { useToast } from '@/composables/useToast'
 import { formatDateTime } from '@/utils/date'
@@ -19,7 +20,7 @@ const yearFilter   = ref('')
 const perOptions = [10, 20, 25, 50]
 
 const statusOptions = [
-  { value: '',      label: 'Semua Status' },
+  { value: '',      label: 'Semua' },
   { value: 'final', label: 'Final' },
   { value: 'draft', label: 'Draft' },
 ]
@@ -84,7 +85,7 @@ watch(search, () => {
   searchTimer = setTimeout(() => { page.value = 1; load() }, 400)
 })
 
-async function deleteSession(id: number) {
+async function deleteSession(id: string) {
   if (!confirm('Hapus sesi draft ini?')) return
   try {
     await store.deleteSession(id)
@@ -97,88 +98,50 @@ async function deleteSession(id: number) {
 
 <template>
   <div class="space-y-5">
-    <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Sesi Tes</h1>
-        <p class="text-sm text-gray-500">{{ store.pagination.total }} total sesi</p>
-      </div>
+    <PageHeader title="Sesi Tes" :subtitle="`${store.pagination.total} sesi tercatat`">
       <RouterLink to="/sessions/new" class="btn-primary">+ Sesi Baru</RouterLink>
-    </div>
+    </PageHeader>
 
-    <!-- DataTable top bar -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div class="flex items-center gap-2 flex-wrap">
-        <span class="text-sm text-gray-600">Tampilkan</span>
-        <select
-          v-model="perPage"
-          class="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option v-for="n in perOptions" :key="n" :value="n">{{ n }}</option>
+    <div class="toolbar">
+      <div class="flex flex-wrap items-center gap-3">
+        <SearchInput v-model="search" placeholder="Cari peserta…" />
+        <div class="seg" role="group" aria-label="Filter status">
+          <button v-for="o in statusOptions" :key="o.value" @click="statusFilter = o.value"
+            :aria-pressed="statusFilter === o.value"
+            :class="['seg-btn', statusFilter === o.value ? 'seg-btn-on' : '']">{{ o.label }}</button>
+        </div>
+        <select v-if="availableYears.length" v-model="yearFilter" class="field-select" aria-label="Tahun ajaran">
+          <option value="">Semua tahun ajaran</option>
+          <option v-for="yr in availableYears" :key="yr" :value="yr">{{ yr }}</option>
         </select>
-        <span class="text-sm text-gray-600">entri</span>
-
-        <!-- Status filter -->
-        <select
-          v-model="statusFilter"
-          class="rounded border border-gray-300 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option v-for="o in statusOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-        </select>
-
-        <!-- Year filter chips (from loaded data) -->
-        <template v-if="availableYears.length">
-          <button
-            @click="yearFilter = ''"
-            :class="['px-2.5 py-1 rounded-full text-xs font-medium border transition-colors', yearFilter === '' ? 'bg-primary-600 border-primary-600 text-white' : 'bg-white border-gray-300 text-gray-600 hover:border-primary-400']"
-          >Semua</button>
-          <button
-            v-for="yr in availableYears"
-            :key="yr"
-            @click="yearFilter = yr"
-            :class="['px-2.5 py-1 rounded-full text-xs font-medium border transition-colors', yearFilter === yr ? 'bg-primary-600 border-primary-600 text-white' : 'bg-white border-gray-300 text-gray-600 hover:border-primary-400']"
-          >{{ yr }}</button>
-        </template>
-      </div>
-
-      <!-- Search -->
-      <div class="relative">
-        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input v-model="search" type="search" placeholder="Cari peserta…"
-          class="rounded border border-gray-300 py-1.5 pl-8 pr-3 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-primary-500" />
       </div>
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto rounded-lg border border-gray-200">
+    <div class="table-wrap">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th
               v-for="col in columns"
               :key="col.key"
-              :class="['px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider select-none', col.class, col.sortable ? 'cursor-pointer hover:bg-gray-100' : '']"
+              :class="['dt-th', col.class, col.sortable ? 'dt-sortable' : '']"
               @click="col.sortable && toggleSort(col.key)"
             >
               <span class="inline-flex items-center gap-1">
                 {{ col.label }}
-                <span v-if="col.sortable" class="inline-flex flex-col gap-0">
-                  <svg :class="['h-2 w-2', sortIcon(col.key) === 'asc' ? 'text-primary-600' : 'text-gray-300']" fill="currentColor" viewBox="0 0 320 512">
-                    <path d="M279 224H41c-21.4 0-32.1-25.9-17-41L143 64c9.4-9.4 24.6-9.4 33.9 0l119 119c15.2 15.1 4.5 41-16.9 41z"/>
-                  </svg>
-                  <svg :class="['h-2 w-2', sortIcon(col.key) === 'desc' ? 'text-primary-600' : 'text-gray-300']" fill="currentColor" viewBox="0 0 320 512">
-                    <path d="M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41z"/>
-                  </svg>
-                </span>
+                <svg v-if="col.sortable" :class="['h-3 w-3', sortIcon(col.key) !== 'none' ? 'text-primary-600' : 'text-gray-300']" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path v-if="sortIcon(col.key) === 'desc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                  <path v-else-if="sortIcon(col.key) === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                  <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
+                </svg>
               </span>
             </th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
+        <tbody class="divide-y divide-gray-100">
           <tr v-if="store.loading">
-            <td :colspan="columns.length" class="px-4 py-12 text-center">
+            <td :colspan="columns.length" class="px-4 py-14 text-center">
               <svg class="animate-spin h-6 w-6 text-primary-500 mx-auto" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -186,7 +149,7 @@ async function deleteSession(id: number) {
             </td>
           </tr>
           <tr v-else-if="sortedSessions.length === 0">
-            <td :colspan="columns.length" class="px-4 py-12 text-center text-gray-400 text-sm">
+            <td :colspan="columns.length" class="px-4 py-14 text-center text-gray-400 text-sm">
               {{ search ? `Tidak ada hasil untuk "${search}"` : 'Belum ada sesi tes.' }}
             </td>
           </tr>
@@ -204,10 +167,10 @@ async function deleteSession(id: number) {
               </span>
             </td>
             <td class="px-4 py-3">
-              <div class="flex items-center gap-3 justify-end">
-                <RouterLink :to="`/sessions/${s.id}`" class="text-xs text-primary-600 hover:underline font-medium">Detail</RouterLink>
-                <RouterLink v-if="s.status === 'draft'" :to="`/sessions/${s.id}/input`" class="text-xs text-emerald-600 hover:underline font-medium">Input</RouterLink>
-                <button v-if="s.status === 'draft'" @click="deleteSession(s.id)" class="text-xs text-red-500 hover:text-red-700">Hapus</button>
+              <div class="flex items-center gap-1.5 justify-end">
+                <RouterLink :to="`/sessions/${s.id}`" class="act act-primary">Detail</RouterLink>
+                <RouterLink v-if="s.status === 'draft'" :to="`/sessions/${s.id}/input`" class="act act-success">Input</RouterLink>
+                <button v-if="s.status === 'draft'" @click="deleteSession(s.id)" class="act act-danger">Hapus</button>
               </div>
             </td>
           </tr>
@@ -215,12 +178,20 @@ async function deleteSession(id: number) {
       </table>
     </div>
 
-    <!-- DataTable bottom bar -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <p class="text-sm text-gray-500">
-        Menampilkan <span class="font-medium text-gray-700">{{ from }}</span>–<span class="font-medium text-gray-700">{{ to }}</span>
-        dari <span class="font-medium text-gray-700">{{ store.pagination.total }}</span> entri
-      </p>
+    <!-- Footer -->
+    <div class="flex items-center justify-between flex-wrap gap-3 text-sm text-gray-500">
+      <div class="flex items-center gap-4 flex-wrap">
+        <p>
+          <span class="font-medium text-gray-700">{{ from }}–{{ to }}</span> dari
+          <span class="font-medium text-gray-700">{{ store.pagination.total }}</span>
+        </p>
+        <label class="flex items-center gap-2">
+          <span>Baris</span>
+          <select v-model="perPage" class="field-select !py-1 !text-xs">
+            <option v-for="n in perOptions" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </label>
+      </div>
       <BasePagination
         :current-page="store.pagination.current_page"
         :last-page="store.pagination.last_page"

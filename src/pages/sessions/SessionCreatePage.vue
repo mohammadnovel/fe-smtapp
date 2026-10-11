@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PageHeader from '@/components/common/PageHeader.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessions'
@@ -17,7 +18,7 @@ const loading      = ref(false)
 const error        = ref('')
 
 const form = ref({
-  participant_id: route.query.participant ? Number(route.query.participant) : '',
+  participant_id: route.query.participant ? String(route.query.participant) : '',
   academic_year: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
   semester: new Date().getMonth() < 7 ? '2' : '1',
   test_date: new Date().toISOString().split('T')[0],
@@ -55,10 +56,7 @@ async function submit() {
 
 <template>
   <div class="max-w-lg mx-auto space-y-5">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Sesi Tes Baru</h1>
-      <p class="text-sm text-gray-500">Buat sesi tes untuk satu peserta</p>
-    </div>
+    <PageHeader title="Sesi tes baru" subtitle="Buat sesi tes untuk satu peserta" />
 
     <div class="card space-y-4">
       <AlertBanner v-if="error" type="error" dismissable @dismiss="error = ''">{{ error }}</AlertBanner>

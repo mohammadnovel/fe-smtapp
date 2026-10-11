@@ -17,7 +17,7 @@ async function submit() {
   loading.value = true
   try {
     await auth.login(form.value)
-    router.push('/')
+    router.push({ name: 'dashboard' })
   } catch (e: any) {
     error.value = e?.response?.data?.message ?? 'Login gagal. Coba lagi.'
   } finally {

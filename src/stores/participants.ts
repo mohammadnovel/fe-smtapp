@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { participantsApi, type ParticipantFilters, type ParticipantPayload } from '@/api/participants'
 
 export interface Participant {
-  id: number
+  id: string
   school_id: number
   full_name: string
   date_of_birth: string | null
@@ -51,14 +51,14 @@ export const useParticipantsStore = defineStore('participants', () => {
     return data
   }
 
-  async function updateParticipant(id: number, payload: ParticipantPayload) {
+  async function updateParticipant(id: string, payload: ParticipantPayload) {
     const { data } = await participantsApi.update(id, payload)
     const idx = participants.value.findIndex(p => p.id === id)
     if (idx !== -1) participants.value[idx] = data
     return data
   }
 
-  async function deleteParticipant(id: number) {
+  async function deleteParticipant(id: string) {
     await participantsApi.delete(id)
     participants.value = participants.value.filter(p => p.id !== id)
   }

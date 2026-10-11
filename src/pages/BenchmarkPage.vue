@@ -4,6 +4,7 @@ import { benchmarksApi } from '@/api/benchmarks'
 import { useAuthStore } from '@/stores/auth'
 import DataTable, { type DtColumn } from '@/components/common/DataTable.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
@@ -124,7 +125,7 @@ async function submit() {
   }
 }
 
-async function deleteBenchmark(id: number) {
+async function deleteBenchmark(id: string) {
   if (!confirm('Hapus benchmark kustom ini?')) return
   try {
     await benchmarksApi.delete(id)
@@ -138,14 +139,9 @@ async function deleteBenchmark(id: number) {
 
 <template>
   <div class="space-y-5">
-    <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Benchmark</h1>
-        <p class="text-sm text-gray-500">Nilai acuan Asian Benchmark + kustom sekolah ({{ allData.length }} total)</p>
-      </div>
+    <PageHeader title="Benchmark" :subtitle="`Nilai acuan Asian Benchmark dan kustom sekolah, ${allData.length} total`">
       <BaseButton v-if="auth.isAdmin || auth.isCoach" @click="showForm = true">+ Tambah Kustom</BaseButton>
-    </div>
+    </PageHeader>
 
     <!-- Filter row -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -162,7 +158,7 @@ async function deleteBenchmark(id: number) {
       />
       <select
         v-model="filterGender"
-        class="rounded border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        class="field-select"
       >
         <option v-for="opt in genderOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
       </select>
@@ -174,7 +170,7 @@ async function deleteBenchmark(id: number) {
       <button
         v-if="filterComponent"
         @click="filterComponent = ''; resetItemFilter()"
-        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-100 text-primary-700 text-xs hover:bg-primary-200"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary-100 text-primary-700 text-xs hover:bg-primary-200"
       >
         {{ filterComponent }}
         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -182,7 +178,7 @@ async function deleteBenchmark(id: number) {
       <button
         v-if="filterItem"
         @click="filterItem = ''"
-        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs hover:bg-blue-200"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 text-xs hover:bg-blue-200"
       >
         {{ filterItem }}
         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -190,7 +186,7 @@ async function deleteBenchmark(id: number) {
       <button
         v-if="filterGender"
         @click="filterGender = ''"
-        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs hover:bg-emerald-200"
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-xs hover:bg-emerald-200"
       >
         {{ filterGender === 'male' ? 'Laki-laki' : 'Perempuan' }}
         <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -231,7 +227,7 @@ async function deleteBenchmark(id: number) {
             <button
               v-if="b.school_id"
               @click="deleteBenchmark(b.id)"
-              class="text-xs text-red-500 hover:text-red-700 hover:underline"
+              class="act act-danger"
             >Hapus</button>
           </td>
         </tr>

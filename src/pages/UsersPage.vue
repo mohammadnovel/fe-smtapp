@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import http from '@/api/http'
 import DataTable, { type DtColumn } from '@/components/common/DataTable.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
@@ -19,16 +20,15 @@ const form     = ref({ name: '', email: '', role: 'teacher' })
 
 const roleFilter = ref('')
 
-const roleFilterOptions = [
-  { value: '',              label: 'Semua Peran' },
-  { value: 'administrator', label: 'Administrator' },
-  { value: 'teacher',       label: 'Guru PJOK' },
-  { value: 'coach',         label: 'Pelatih' },
-]
-const roleOptions = [
-  { value: 'teacher', label: 'Guru PJOK' },
-  { value: 'coach',   label: 'Pelatih' },
-]
+const roles = ref<{ code: string; label: string; base_role: string }[]>([])
+const roleFilterOptions = computed(() => [
+  { value: '', label: 'Semua Peran' },
+  ...roles.value.map(r => ({ value: r.code, label: r.label })),
+])
+// Administrator cannot be invited, every other active role can
+const roleOptions = computed(() =>
+  roles.value.filter(r => r.code !== 'administrator').map(r => ({ value: r.code, label: r.label }))
+)
 
 const tableData = computed(() =>
   roleFilter.value
@@ -45,11 +45,17 @@ const columns: DtColumn[] = [
 ]
 
 function roleLabel(role: string) {
-  return role === 'administrator' ? 'Admin' : role === 'teacher' ? 'Guru PJOK' : 'Pelatih'
+  return roles.value.find(r => r.code === role)?.label ?? role
+}
+
+function roleTone(role: string) {
+  const base = roles.value.find(r => r.code === role)?.base_role ?? role
+  return base === 'administrator' ? 'purple' : base === 'teacher' ? 'blue' : 'emerald'
 }
 
 onMounted(async () => {
-  const { data } = await http.get('/users')
+  const [{ data: roleData }, { data }] = await Promise.all([http.get('/roles'), http.get('/users')])
+  roles.value = roleData
   rawUsers.value = (data as any[]).map(u => ({ ...u, role_label: roleLabel(u.role) }))
   loading.value  = false
 })
@@ -61,7 +67,7 @@ async function submit() {
     const { data } = await http.post('/users', form.value)
     rawUsers.value.push({ ...data, role_label: roleLabel(data.role) })
     showForm.value = false
-    form.value     = { name: '', email: '', role: 'teacher' }
+    form.value     = { name: '', email: '', role: roleOptions.value[0]?.value ?? 'teacher' }
     toast.success('Pengguna berhasil ditambahkan.')
   } catch (e: any) {
     if (e?.response?.data?.errors) {
@@ -92,30 +98,14 @@ async function toggleActive(user: any) {
 
 <template>
   <div class="space-y-5">
-    <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Pengguna</h1>
-        <p class="text-sm text-gray-500">Kelola guru dan pelatih sekolah ({{ rawUsers.length }} pengguna)</p>
-      </div>
+    <PageHeader title="Pengguna" :subtitle="`${rawUsers.length} pengguna di sekolah ini`">
       <BaseButton @click="showForm = true">+ Undang Pengguna</BaseButton>
-    </div>
+    </PageHeader>
 
-    <!-- Role filter chips -->
-    <div class="flex items-center gap-2 flex-wrap">
-      <button
-        v-for="opt in roleFilterOptions"
-        :key="opt.value"
-        @click="roleFilter = opt.value"
-        :class="[
-          'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
-          roleFilter === opt.value
-            ? 'bg-primary-600 border-primary-600 text-white'
-            : 'bg-white border-gray-300 text-gray-600 hover:border-primary-400 hover:text-primary-600',
-        ]"
-      >
-        {{ opt.label }}
-      </button>
+    <div class="seg flex-wrap self-start" role="group" aria-label="Filter peran">
+      <button v-for="opt in roleFilterOptions" :key="opt.value" @click="roleFilter = opt.value"
+        :aria-pressed="roleFilter === opt.value"
+        :class="['seg-btn', roleFilter === opt.value ? 'seg-btn-on' : '']">{{ opt.label }}</button>
     </div>
 
     <!-- DataTable -->
@@ -124,8 +114,8 @@ async function toggleActive(user: any) {
         <tr v-for="u in rows" :key="u.id" class="hover:bg-gray-50 transition-colors">
           <td class="px-4 py-3">
             <div class="flex items-center gap-3">
-              <div class="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                :class="u.role === 'administrator' ? 'bg-purple-100 text-purple-700' : u.role === 'teacher' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'"
+              <div class="h-9 w-9 rounded-md flex items-center justify-center text-sm font-bold flex-shrink-0"
+                :class="{ purple: 'bg-purple-100 text-purple-700', blue: 'bg-blue-100 text-blue-700', emerald: 'bg-emerald-100 text-emerald-700' }[roleTone(u.role)]"
               >
                 {{ u.name.charAt(0).toUpperCase() }}
               </div>
@@ -137,7 +127,7 @@ async function toggleActive(user: any) {
           </td>
           <td class="px-4 py-3 hidden sm:table-cell text-sm text-gray-500">{{ u.email }}</td>
           <td class="px-4 py-3">
-            <span :class="u.role === 'administrator' ? 'badge-excellent' : u.role === 'teacher' ? 'badge-good' : 'badge-average'">
+            <span :class="{ purple: 'badge-excellent', blue: 'badge-good', emerald: 'badge-average' }[roleTone(u.role)]">
               {{ u.role_label }}
             </span>
           </td>
@@ -150,7 +140,7 @@ async function toggleActive(user: any) {
             <button
               v-if="u.role !== 'administrator'"
               @click="toggleActive(u)"
-              :class="['text-xs font-medium hover:underline', u.is_active ? 'text-amber-600' : 'text-emerald-600']"
+              :class="['act', u.is_active ? 'act-danger' : 'act-success']"
             >
               {{ u.is_active ? 'Nonaktifkan' : 'Aktifkan' }}
             </button>

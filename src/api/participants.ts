@@ -24,9 +24,9 @@ export interface ParticipantPayload {
 
 export const participantsApi = {
   list:    (filters: ParticipantFilters = {}) => http.get('/participants', { params: filters }),
-  get:     (id: number)                       => http.get(`/participants/${id}`),
+  get:     (id: string)                       => http.get(`/participants/${id}`),
   create:  (data: ParticipantPayload)         => http.post('/participants', data),
-  update:  (id: number, data: ParticipantPayload) => http.put(`/participants/${id}`, data),
-  delete:  (id: number)                       => http.delete(`/participants/${id}`),
+  update:  (id: string, data: ParticipantPayload) => http.put(`/participants/${id}`, data),
+  delete:  (id: string)                       => http.delete(`/participants/${id}`),
   classes: ()                                 => http.get('/participants/classes'),
 }

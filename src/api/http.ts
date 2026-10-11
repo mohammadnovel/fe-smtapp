@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
-import router from '@/router'
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api',
   withCredentials: true,
+  withXSRFToken: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -17,9 +17,11 @@ http.interceptors.response.use(
     if (error.response?.status === 401) {
       const auth = useAuthStore()
       if (auth.user) {
-        auth.logout()
-        router.push('/login')
+        auth.logout(false)
       }
+    }
+    if (error.response?.status === 403 && error.response.data?.status) {
+      useAuthStore().renewalPrompt = true
     }
     return Promise.reject(error)
   }

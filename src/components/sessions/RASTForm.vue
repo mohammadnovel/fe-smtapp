@@ -7,7 +7,7 @@ import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
 
-const props = defineProps<{ sessionId: number; weightKg: number }>()
+const props = defineProps<{ sessionId: string; weightKg: number }>()
 
 const sprints = ref(Array.from({ length: 6 }, (_, i) => ({
   sprint_number: i + 1,
