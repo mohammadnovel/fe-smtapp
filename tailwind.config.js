@@ -1,5 +1,11 @@
 /** @type {import('tailwindcss').Config} */
+// Gray steps come from CSS variables so the dark theme can swap them (see main.css)
+const gray = Object.fromEntries(
+  [50, 100, 200, 300, 400, 500, 600, 700, 800, 900].map(n => [n, `rgb(var(--g-${n}) / <alpha-value>)`])
+)
+
 export default {
+  darkMode: 'class',
   content: [
     './index.html',
     './src/**/*.{vue,js,ts,jsx,tsx}',
@@ -7,6 +13,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        gray,
         primary: {
           50:  '#ecfdf5',
           100: '#d1fae5',

@@ -6,8 +6,10 @@ import { Chart, registerables } from 'chart.js'
 
 import App from './App.vue'
 import router from './router'
+import { initTheme } from './composables/useTheme'
 
 Chart.register(...registerables)
+initTheme()
 
 const app = createApp(App)
 app.use(createPinia())

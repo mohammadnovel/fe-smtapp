@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useTheme } from '@/composables/useTheme'
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { participantsApi } from '@/api/participants'
@@ -7,6 +8,7 @@ import PPIBadge from '@/components/common/PPIBadge.vue'
 import { Radar, Line } from 'vue-chartjs'
 import { formatDate, formatDateTime } from '@/utils/date'
 
+const { themeVersion } = useTheme()
 const route       = useRoute()
 const participant = ref<any>(null)
 const progress    = ref<any[]>([])
@@ -119,11 +121,11 @@ const lineOptions  = { scales: { y: { min: 0, max: 150 } } }
     <div v-if="progress.length" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Radar Performa (Terakhir)</h2>
-        <Radar v-if="radarData" :data="radarData" :options="radarOptions" />
+        <Radar v-if="radarData" :key="themeVersion" :data="radarData" :options="radarOptions" />
       </div>
       <div class="card">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Tren PPI</h2>
-        <Line v-if="lineData" :data="lineData" :options="lineOptions" />
+        <Line v-if="lineData" :key="themeVersion" :data="lineData" :options="lineOptions" />
         <div v-else class="text-center py-8 text-gray-400 text-sm">Perlu minimal 2 sesi untuk tren.</div>
       </div>
     </div>
