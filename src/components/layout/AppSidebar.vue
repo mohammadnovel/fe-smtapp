@@ -88,7 +88,7 @@ const roleLabel = computed(() => auth.user?.is_superadmin ? 'Super Admin' : auth
             :class="[
               'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
               isActive(item.to)
-                ? 'bg-white text-primary-900'
+                ? 'bg-white/95 text-primary-900'
                 : 'text-emerald-50/80 hover:bg-white/10 hover:text-white'
             ]"
           >

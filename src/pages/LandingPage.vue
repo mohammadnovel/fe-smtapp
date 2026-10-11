@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import http from '@/api/http'
+import ThemeToggle from '@/components/common/ThemeToggle.vue'
 
 interface Plan {
   code: string; name: string; price_monthly: number; price_yearly: number
@@ -69,6 +70,7 @@ const bars = [['Kecepatan', 90], ['Kelincahan', 78], ['Power tubuh bawah', 84], 
           <a href="#harga" class="hover:text-white">Harga</a>
         </nav>
         <div class="hidden md:flex items-center gap-2">
+          <ThemeToggle on-dark />
           <RouterLink to="/login" class="text-sm font-medium text-white/90 hover:text-white px-3 py-2">Masuk</RouterLink>
           <RouterLink to="/register" class="inline-flex items-center rounded-md bg-primary-500 hover:bg-emerald-400 text-primary-900 text-sm font-semibold px-4 py-2 transition-colors">Coba gratis</RouterLink>
         </div>

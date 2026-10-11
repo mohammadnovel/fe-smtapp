@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useTheme } from '@/composables/useTheme'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { useSessionsStore } from '@/stores/sessions'
@@ -9,6 +10,7 @@ import http from '@/api/http'
 import { useToast } from '@/composables/useToast'
 import { formatDateTime } from '@/utils/date'
 
+const { themeVersion } = useTheme()
 const route    = useRoute()
 const store    = useSessionsStore()
 const toast    = useToast()
@@ -208,7 +210,7 @@ async function downloadExport(format: 'pdf' | 'excel') {
       <!-- Radar Card -->
       <div class="card">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Radar Performa</h2>
-        <Radar v-if="radarData" ref="radarRef" :data="radarData" :options="radarOptions" />
+        <Radar v-if="radarData" ref="radarRef" :key="themeVersion" :data="radarData" :options="radarOptions" />
         <div v-else class="text-center py-8 text-gray-400 text-sm">Isi data tes untuk melihat radar.</div>
       </div>
     </div>

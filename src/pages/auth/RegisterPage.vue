@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import AlertBanner from '@/components/common/AlertBanner.vue'
+import ThemeToggle from '@/components/common/ThemeToggle.vue'
+import http from '@/api/http'
 
 const router = useRouter()
 const auth   = useAuthStore()
@@ -18,6 +20,14 @@ const form = ref({
 const loading = ref(false)
 const errors  = ref<Record<string, string>>({})
 const apiError = ref('')
+const trialDays = ref<number | null>(null)
+
+// Trial length comes from the gencode table, not a hardcoded number
+onMounted(async () => {
+  try {
+    trialDays.value = (await http.get('/public/landing')).data.trial_days
+  } catch { /* heading falls back to the generic text */ }
+})
 
 const schoolTypes = [
   { value: 'junior_high', label: 'SMP / MTs' },
@@ -48,13 +58,14 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-primary-50 to-emerald-100 flex items-center justify-center p-4">
+  <div class="relative min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="absolute top-4 right-4"><ThemeToggle /></div>
     <div class="w-full max-w-lg">
       <div class="text-center mb-6">
         <div class="inline-flex items-center justify-center h-12 w-12 bg-primary-600 rounded-xl mb-2">
           <span class="text-white font-bold">SA</span>
         </div>
-        <h1 class="text-xl font-bold text-gray-900">Daftar Sekolah — Trial 7 Hari Gratis</h1>
+        <h1 class="text-xl font-bold text-gray-900">{{ trialDays ? `Daftar Sekolah, Trial ${trialDays} Hari Gratis` : 'Daftar Sekolah' }}</h1>
       </div>
 
       <div class="card">
@@ -87,7 +98,7 @@ async function submit() {
           </div>
 
           <BaseButton type="submit" class="w-full" :loading="loading" size="lg">
-            Daftar & Mulai Trial Gratis
+            {{ trialDays ? 'Daftar dan mulai trial gratis' : 'Daftar' }}
           </BaseButton>
         </form>
 

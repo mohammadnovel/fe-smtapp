@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import ThemeToggle from '@/components/common/ThemeToggle.vue'
 
 const router   = useRouter()
 const auth     = useAuthStore()
@@ -71,6 +72,7 @@ async function submit() {
 
     <!-- Right form panel -->
     <main class="form-panel">
+      <div class="absolute top-4 right-4"><ThemeToggle /></div>
       <div class="form-inner">
 
         <!-- Mobile-only logo -->
@@ -265,6 +267,7 @@ async function submit() {
   justify-content: center;
   background: #fff;
   padding: 2rem 1.25rem;
+  position: relative;
 }
 
 .form-inner {
@@ -441,4 +444,23 @@ form {
 .register-link a:hover {
   text-decoration: underline;
 }
+
+/* ─── Dark theme ─── */
+.dark .form-panel { background: rgb(var(--surface)); }
+.dark .mobile-logo { color: #d1fae5; }
+.dark .form-heading h2 { color: rgb(var(--g-900)); }
+.dark .form-heading p, .dark .register-link { color: rgb(var(--g-500)); }
+.dark .alert-error { background: rgba(239, 68, 68, .12); border-color: rgba(239, 68, 68, .4); color: #fca5a5; }
+.dark .alert-error button { color: #fca5a5; }
+.dark .field label { color: rgb(var(--g-700)); }
+.dark .field input, .dark .pass-wrap input {
+  background: rgb(var(--g-50));
+  border-color: rgb(var(--g-300));
+  color: rgb(var(--g-900));
+}
+.dark .field input::placeholder, .dark .pass-wrap input::placeholder { color: rgb(var(--g-400)); }
+.dark .field input:focus, .dark .pass-wrap input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .25); }
+.dark .eye-btn { color: rgb(var(--g-500)); }
+.dark .eye-btn:hover { color: rgb(var(--g-800)); }
+.dark .register-link a { color: #6ee7b7; }
 </style>
