@@ -3,22 +3,22 @@ import { ref } from 'vue'
 import { sessionsApi } from '@/api/sessions'
 
 export interface TestSession {
-  id: number
-  participant_id: number
+  id: string
+  participant_id: string
   academic_year: string
   semester: 1 | 2
   test_date: string
   location: string | null
   status: 'draft' | 'final'
-  participant?: { id: number; full_name: string; gender: string; is_athlete: boolean }
+  participant?: { id: string; full_name: string; gender: string; is_athlete: boolean }
   test_results?: TestResult[]
   aerobic_laps?: AerobicLap[]
   anaerobic_sprints?: AnaerobicSprint[]
 }
 
 export interface TestResult {
-  id: number
-  session_id: number
+  id: string
+  session_id: string
   component: string
   test_item: string
   result_value: number | null
@@ -66,7 +66,7 @@ export const useSessionsStore = defineStore('sessions', () => {
     }
   }
 
-  async function fetchSession(id: number) {
+  async function fetchSession(id: string) {
     const { data } = await sessionsApi.get(id)
     current.value = data
     return data
@@ -78,13 +78,13 @@ export const useSessionsStore = defineStore('sessions', () => {
     return data
   }
 
-  async function finalizeSession(id: number) {
+  async function finalizeSession(id: string) {
     const { data } = await sessionsApi.finalize(id)
     if (current.value?.id === id) current.value = data
     return data
   }
 
-  async function deleteSession(id: number) {
+  async function deleteSession(id: string) {
     await sessionsApi.delete(id)
     sessions.value = sessions.value.filter(s => s.id !== id)
   }

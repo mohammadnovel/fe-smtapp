@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import http from '@/api/http'
 import DataTable, { type DtColumn } from '@/components/common/DataTable.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { formatDateTime } from '@/utils/date'
 
 const rawData   = ref<any[]>([])
@@ -72,35 +73,18 @@ onMounted(load)
 
 <template>
   <div class="space-y-5">
-    <!-- Header -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">Notifikasi</h1>
-        <p class="text-sm text-gray-500">
-          {{ rawData.length }} notifikasi
-          <span v-if="unreadCount" class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-            {{ unreadCount }} belum dibaca
-          </span>
-        </p>
-      </div>
-      <BaseButton variant="secondary" size="sm" @click="markAll">Tandai Semua Dibaca</BaseButton>
-    </div>
+    <PageHeader title="Notifikasi">
+      <template #subtitle>
+        {{ rawData.length }} notifikasi
+        <span v-if="unreadCount" class="ml-1 rounded-md bg-red-100 px-1.5 py-0.5 text-xs font-semibold text-red-700">{{ unreadCount }} belum dibaca</span>
+      </template>
+      <BaseButton variant="secondary" @click="markAll">Tandai semua dibaca</BaseButton>
+    </PageHeader>
 
-    <!-- Type filter chips -->
-    <div class="flex items-center gap-2 flex-wrap">
-      <button
-        v-for="opt in typeOptions"
-        :key="opt.value"
-        @click="typeFilter = opt.value"
-        :class="[
-          'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
-          typeFilter === opt.value
-            ? 'bg-primary-600 border-primary-600 text-white'
-            : 'bg-white border-gray-300 text-gray-600 hover:border-primary-400',
-        ]"
-      >
-        {{ opt.label }}
-      </button>
+    <div class="seg flex-wrap self-start" role="group" aria-label="Filter jenis">
+      <button v-for="opt in typeOptions" :key="opt.value" @click="typeFilter = opt.value"
+        :aria-pressed="typeFilter === opt.value"
+        :class="['seg-btn', typeFilter === opt.value ? 'seg-btn-on' : '']">{{ opt.label }}</button>
     </div>
 
     <!-- DataTable -->
@@ -113,7 +97,7 @@ onMounted(load)
           :class="['cursor-pointer transition-colors', n.is_read ? 'hover:bg-gray-50' : 'bg-primary-50/40 hover:bg-primary-50']"
         >
           <td class="px-4 py-3 hidden sm:table-cell">
-            <span :class="['inline-flex px-2 py-0.5 rounded-full text-xs font-medium', typeColors[n.type] ?? 'bg-gray-100 text-gray-700']">
+            <span :class="['inline-flex px-2 py-0.5 rounded-md text-xs font-semibold', typeColors[n.type] ?? 'bg-gray-100 text-gray-700']">
               {{ n.type_label }}
             </span>
           </td>
@@ -136,7 +120,7 @@ onMounted(load)
             <button
               v-if="!n.is_read"
               @click.stop="markRead(n)"
-              class="text-xs text-primary-600 hover:underline"
+              class="act act-primary"
             >Tandai dibaca</button>
           </td>
         </tr>

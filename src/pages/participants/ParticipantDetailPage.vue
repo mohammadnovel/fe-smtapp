@@ -14,7 +14,7 @@ const loading     = ref(true)
 const errorMsg    = ref('')
 
 onMounted(async () => {
-  const id = Number(route.params.id)
+  const id = String(route.params.id)
   try {
     const [pRes, progRes] = await Promise.all([
       participantsApi.get(id),
@@ -75,19 +75,20 @@ const lineOptions  = { scales: { y: { min: 0, max: 150 } } }
   <!-- Error -->
   <div v-else-if="errorMsg" class="card text-center py-12">
     <p class="text-red-500 font-medium">{{ errorMsg }}</p>
-    <RouterLink to="/participants" class="mt-3 inline-block text-sm text-primary-600 hover:underline">← Kembali ke daftar peserta</RouterLink>
+    <RouterLink to="/participants" class="mt-4 btn-secondary">Kembali ke daftar peserta</RouterLink>
   </div>
 
   <div v-else-if="participant" class="space-y-6">
     <!-- Back -->
-    <RouterLink to="/participants" class="text-sm text-primary-600 hover:underline flex items-center gap-1">
-      ← Kembali ke daftar peserta
+    <RouterLink to="/participants" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900">
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+      Daftar peserta
     </RouterLink>
 
     <!-- Profile -->
     <div class="card">
       <div class="flex items-start gap-4">
-        <div class="h-14 w-14 bg-primary-100 rounded-full flex items-center justify-center text-2xl font-bold text-primary-700">
+        <div class="h-14 w-14 bg-primary-100 rounded-lg flex items-center justify-center text-2xl font-bold text-primary-700">
           {{ participant.full_name.charAt(0) }}
         </div>
         <div class="flex-1">
@@ -108,7 +109,7 @@ const lineOptions  = { scales: { y: { min: 0, max: 150 } } }
             </span>
           </div>
         </div>
-        <RouterLink :to="`/sessions/new?participant=${participant.id}`" class="btn-primary text-xs">
+        <RouterLink :to="`/sessions/new?participant=${participant.id}`" class="btn-primary">
           + Sesi Baru
         </RouterLink>
       </div>
@@ -117,11 +118,11 @@ const lineOptions  = { scales: { y: { min: 0, max: 150 } } }
     <!-- Charts -->
     <div v-if="progress.length" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card">
-        <h2 class="font-semibold text-gray-900 mb-4">Radar Performa (Terakhir)</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Radar Performa (Terakhir)</h2>
         <Radar v-if="radarData" :data="radarData" :options="radarOptions" />
       </div>
       <div class="card">
-        <h2 class="font-semibold text-gray-900 mb-4">Tren PPI</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Tren PPI</h2>
         <Line v-if="lineData" :data="lineData" :options="lineOptions" />
         <div v-else class="text-center py-8 text-gray-400 text-sm">Perlu minimal 2 sesi untuk tren.</div>
       </div>
@@ -129,20 +130,20 @@ const lineOptions  = { scales: { y: { min: 0, max: 150 } } }
 
     <!-- Test History -->
     <div class="card">
-      <h2 class="font-semibold text-gray-900 mb-4">Riwayat Tes</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Riwayat Tes</h2>
       <div v-if="!progress.length" class="text-center py-8 text-gray-400 text-sm">
         Belum ada sesi tes untuk peserta ini.
       </div>
       <div v-else class="space-y-3">
         <div v-for="p in [...progress].reverse()" :key="p.session_id"
-          class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+          class="flex items-center justify-between px-4 py-3 border border-gray-200 rounded-md">
           <div>
             <p class="font-medium text-sm text-gray-900">{{ p.academic_year }} — Semester {{ p.semester }}</p>
             <p class="text-xs text-gray-500">{{ formatDateTime(p.test_date) }}</p>
           </div>
           <div class="flex items-center gap-3">
             <PPIBadge v-if="p.ppi" :ppi="p.ppi" />
-            <RouterLink :to="`/sessions/${p.session_id}`" class="text-xs text-primary-600 hover:underline">
+            <RouterLink :to="`/sessions/${p.session_id}`" class="act act-primary">
               Detail
             </RouterLink>
           </div>

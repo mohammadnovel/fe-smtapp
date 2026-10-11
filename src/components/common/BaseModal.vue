@@ -31,7 +31,7 @@ onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
         <div class="absolute inset-0 bg-black/50" @click="emit('close')" />
         <div
           :class="[
-            'relative bg-white rounded-xl shadow-xl w-full',
+            'relative bg-white rounded-lg shadow-xl w-full max-h-[90vh] overflow-y-auto',
             {
               'max-w-sm':  size === 'sm',
               'max-w-md':  !size || size === 'md',

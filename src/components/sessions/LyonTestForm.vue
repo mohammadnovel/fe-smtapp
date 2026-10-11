@@ -7,7 +7,7 @@ import { useToast } from '@/composables/useToast'
 
 const toast = useToast()
 
-const props = defineProps<{ sessionId: number }>()
+const props = defineProps<{ sessionId: string }>()
 
 const laps    = ref<{ lap_number: number; time_cumulative: string; distance_meter: string; time_per_lap?: number | null; speed_mps?: number | null }[]>([])
 const results = ref<any>(null)

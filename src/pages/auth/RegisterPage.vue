@@ -32,7 +32,7 @@ async function submit() {
   loading.value  = true
   try {
     await auth.register(form.value)
-    router.push('/')
+    router.push({ name: 'dashboard' })
   } catch (e: any) {
     if (e?.response?.data?.errors) {
       Object.entries(e.response.data.errors).forEach(([k, v]) => {

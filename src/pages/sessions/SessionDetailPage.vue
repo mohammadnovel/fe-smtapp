@@ -19,7 +19,7 @@ const exporting = ref<'pdf' | 'excel' | null>(null)
 const radarRef  = ref<any>(null)
 
 onMounted(async () => {
-  const id = Number(route.params.id)
+  const id = String(route.params.id)
   try {
     await store.fetchSession(id)
     const { data } = await sessionsApi.getPPI(id)
@@ -90,7 +90,9 @@ async function downloadExport(format: 'pdf' | 'excel') {
     const mime = format === 'pdf'
       ? 'application/pdf'
       : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    const name = `sesi-${session.value.id}-${session.value.participant?.full_name?.replace(/\s+/g, '-') ?? 'export'}.${ext}`
+    // The server names the file (participant and test date); this is only a fallback
+    const disposition = String(response.headers['content-disposition'] ?? '')
+    const name = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? `laporan-tes.${ext}`
     const url  = URL.createObjectURL(new Blob([response.data], { type: mime }))
     const a    = document.createElement('a')
     a.href     = url
@@ -117,7 +119,7 @@ async function downloadExport(format: 'pdf' | 'excel') {
   <!-- Error -->
   <div v-else-if="errorMsg" class="card text-center py-12">
     <p class="text-red-500 font-medium">{{ errorMsg }}</p>
-    <RouterLink to="/sessions" class="mt-4 inline-block text-sm text-primary-600 hover:underline">← Kembali ke daftar sesi</RouterLink>
+    <RouterLink to="/sessions" class="mt-4 btn-secondary">Kembali ke daftar sesi</RouterLink>
   </div>
 
   <!-- Content -->
@@ -125,26 +127,25 @@ async function downloadExport(format: 'pdf' | 'excel') {
     <!-- Header -->
     <div class="flex items-start justify-between flex-wrap gap-3">
       <div>
-        <RouterLink :to="`/participants/${session.participant?.id}`" class="text-sm text-primary-600 hover:underline">
-          ← {{ session.participant?.full_name }}
+        <RouterLink :to="`/participants/${session.participant?.id}`" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+          {{ session.participant?.full_name }}
         </RouterLink>
-        <h1 class="text-xl font-bold text-gray-900 mt-1">
-          Sesi Tes — {{ session.academic_year }} Sem {{ session.semester }}
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900 mt-2">
+          Sesi tes {{ session.academic_year }}, semester {{ session.semester }}
+          <span :class="['ml-2 align-middle', session.status === 'final' ? 'badge-good' : 'badge-average']">{{ session.status === 'final' ? 'Final' : 'Draft' }}</span>
         </h1>
         <p class="text-sm text-gray-500">{{ formatDateTime(session.test_date) }} · {{ session.location ?? 'Lokasi tidak ditentukan' }}</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <RouterLink v-if="session.status === 'draft'" :to="`/sessions/${session.id}/input`" class="btn-primary text-sm">
-          Edit Input
+        <RouterLink v-if="session.status === 'draft'" :to="`/sessions/${session.id}/input`" class="btn-primary">
+          Edit input
         </RouterLink>
-        <span :class="session.status === 'final' ? 'badge-good' : 'badge-average'">
-          {{ session.status === 'final' ? 'Final' : 'Draft' }}
-        </span>
         <!-- Export buttons -->
         <button
           @click="downloadExport('pdf')"
           :disabled="exporting !== null"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 text-red-700 bg-white hover:bg-red-50 text-sm font-medium disabled:opacity-50 transition-colors"
+          class="btn-secondary disabled:opacity-50"
         >
           <svg v-if="exporting === 'pdf'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -158,7 +159,7 @@ async function downloadExport(format: 'pdf' | 'excel') {
         <button
           @click="downloadExport('excel')"
           :disabled="exporting !== null"
-          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50 text-sm font-medium disabled:opacity-50 transition-colors"
+          class="btn-secondary disabled:opacity-50"
         >
           <svg v-if="exporting === 'excel'" class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -176,8 +177,8 @@ async function downloadExport(format: 'pdf' | 'excel') {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- PPI Card -->
       <div class="card">
-        <h2 class="font-semibold text-gray-900 mb-4">Physical Performance Index</h2>
-        <div v-if="ppiData" class="text-center py-4">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Physical Performance Index</h2>
+        <div v-if="ppiData && session.test_results?.length" class="text-center py-4">
           <p class="text-5xl font-bold" :style="{ color: getPPICategory(ppiData.ppi).color }">
             {{ ppiData.ppi.toFixed(1) }}%
           </p>
@@ -185,7 +186,7 @@ async function downloadExport(format: 'pdf' | 'excel') {
             {{ getPPICategory(ppiData.ppi).label }}
           </p>
         </div>
-        <div v-else class="text-center py-8 text-gray-400 text-sm">Belum ada data tes.</div>
+        <div v-else class="text-center py-8 text-gray-500 text-sm">Skor PPI muncul setelah hasil tes diisi.</div>
         <!-- Component bars -->
         <div v-if="ppiData?.components?.length" class="mt-4 space-y-2.5">
           <div v-for="c in ppiData.components" :key="c.component" class="flex items-center gap-3">
@@ -206,7 +207,7 @@ async function downloadExport(format: 'pdf' | 'excel') {
 
       <!-- Radar Card -->
       <div class="card">
-        <h2 class="font-semibold text-gray-900 mb-4">Radar Performa</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Radar Performa</h2>
         <Radar v-if="radarData" ref="radarRef" :data="radarData" :options="radarOptions" />
         <div v-else class="text-center py-8 text-gray-400 text-sm">Isi data tes untuk melihat radar.</div>
       </div>
@@ -215,14 +216,14 @@ async function downloadExport(format: 'pdf' | 'excel') {
     <!-- Empty results notice -->
     <div v-if="session.status === 'draft' && !session.test_results?.length" class="card text-center py-8">
       <p class="text-gray-500 text-sm">Sesi masih draft dan belum ada hasil tes.</p>
-      <RouterLink :to="`/sessions/${session.id}/input`" class="mt-2 inline-block text-sm text-primary-600 hover:underline font-medium">
-        Input Hasil Tes →
+      <RouterLink :to="`/sessions/${session.id}/input`" class="mt-4 btn-primary">
+        Input hasil tes
       </RouterLink>
     </div>
 
     <!-- Results by Component -->
     <div v-for="(items, component) in groupedResults" :key="component" class="card">
-      <h2 class="font-semibold text-gray-900 mb-3">{{ component }}</h2>
+      <h2 class="text-lg font-semibold text-gray-900 mb-3">{{ component }}</h2>
       <div class="overflow-x-auto">
         <table class="min-w-full text-sm">
           <thead>

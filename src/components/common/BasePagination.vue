@@ -17,37 +17,15 @@ function pages() {
 </script>
 
 <template>
-  <div class="flex items-center justify-between px-1 py-3">
-    <p class="text-sm text-gray-600">
-      Total <span class="font-semibold">{{ total }}</span> data
-    </p>
-    <div class="flex items-center gap-1">
-      <button
-        :disabled="currentPage <= 1"
-        @click="emit('page', currentPage - 1)"
-        class="p-2 rounded hover:bg-gray-100 disabled:opacity-40"
-      >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <button
-        v-for="p in pages()"
-        :key="p"
-        @click="emit('page', p)"
-        :class="['px-3 py-1 text-sm rounded', p === currentPage ? 'bg-primary-600 text-white' : 'hover:bg-gray-100']"
-      >
-        {{ p }}
-      </button>
-      <button
-        :disabled="currentPage >= lastPage"
-        @click="emit('page', currentPage + 1)"
-        class="p-2 rounded hover:bg-gray-100 disabled:opacity-40"
-      >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </div>
+  <div class="flex items-center gap-1">
+    <button :disabled="currentPage <= 1" @click="emit('page', currentPage - 1)" class="act disabled:opacity-40 disabled:cursor-not-allowed">Sebelumnya</button>
+    <button
+      v-for="p in pages()"
+      :key="p"
+      @click="emit('page', p)"
+      :aria-current="p === currentPage ? 'page' : undefined"
+      :class="['act min-w-[2rem] justify-center', p === currentPage ? '!bg-primary-600 !border-primary-600 !text-white' : '']"
+    >{{ p }}</button>
+    <button :disabled="currentPage >= lastPage" @click="emit('page', currentPage + 1)" class="act disabled:opacity-40 disabled:cursor-not-allowed">Berikutnya</button>
   </div>
 </template>

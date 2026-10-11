@@ -58,7 +58,7 @@ function percentageClass(pct: number | null) {
 
 onMounted(async () => {
   try {
-    const id = Number(route.params.id)
+    const id = String(route.params.id)
     const [sessRes, benchRes] = await Promise.all([
       sessionsApi.get(id),
       benchmarksApi.list(),
@@ -142,13 +142,14 @@ async function finalize() {
     <!-- Header -->
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div>
-        <h1 class="text-xl font-bold text-gray-900">Input Tes: {{ session.participant.full_name }}</h1>
-        <p class="text-sm text-gray-500">{{ session.academic_year }} — Sem {{ session.semester }} · {{ formatDateTime(session.test_date) }}</p>
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900">Input tes: {{ session.participant.full_name }}</h1>
+        <p class="mt-1 text-sm text-gray-500">{{ session.academic_year }}, semester {{ session.semester }} · {{ formatDateTime(session.test_date) }}</p>
       </div>
       <!-- PPI live display -->
-      <div class="text-right">
-        <p class="text-3xl font-bold" :style="{ color: ppiCategory.color }">{{ ppi.toFixed(1) }}%</p>
-        <p class="text-sm" :style="{ color: ppiCategory.color }">PPI — {{ ppiCategory.label }}</p>
+      <div class="rounded-lg border border-gray-200 bg-white px-5 py-3 text-right">
+        <p class="text-xs text-gray-500">PPI saat ini</p>
+        <p class="text-3xl font-bold leading-tight" :style="{ color: ppiCategory.color }">{{ ppi.toFixed(1) }}%</p>
+        <p class="text-sm font-medium" :style="{ color: ppiCategory.color }">{{ ppiCategory.label }}</p>
       </div>
     </div>
 
@@ -156,7 +157,7 @@ async function finalize() {
 
     <!-- 9-Component Input -->
     <div v-for="(items, component) in components" :key="component" class="card space-y-3">
-      <h2 class="font-semibold text-gray-900 border-b border-gray-100 pb-2">{{ component }}</h2>
+      <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-3">{{ component }}</h2>
       <div class="space-y-2">
         <div v-for="item in items" :key="item.test_item" class="flex items-center gap-3 py-1">
           <div class="flex-1 min-w-0">

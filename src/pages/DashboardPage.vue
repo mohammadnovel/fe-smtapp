@@ -3,13 +3,20 @@ import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { dashboardApi } from '@/api/dashboard'
 import DataTable, { type DtColumn } from '@/components/common/DataTable.vue'
-import PPIBadge from '@/components/common/PPIBadge.vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 import { formatDateTime } from '@/utils/date'
 
 const appName  = import.meta.env.VITE_APP_NAME ?? 'SM ATAPP'
 const stats    = ref<any>(null)
 const sessions = ref<any[]>([])
 const loading  = ref(true)
+
+const statItems = [
+  { key: 'total_participants', label: 'Total peserta' },
+  { key: 'total_athletes',     label: 'Atlet' },
+  { key: 'total_students',     label: 'Siswa PJOK' },
+  { key: 'total_sessions',     label: 'Sesi tes' },
+]
 
 const sessionColumns: DtColumn[] = [
   { key: 'participant_name', label: 'Peserta' },
@@ -35,54 +42,35 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-6">
-    <!-- Page title -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-      <p class="text-gray-500 text-sm">Selamat datang di {{ appName }}</p>
-    </div>
-
-    <!-- Stats cards skeleton -->
-    <div v-if="loading" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div v-for="i in 4" :key="i" class="card h-24 animate-pulse bg-gray-100" />
-    </div>
-
-    <!-- Stats cards -->
-    <div v-else-if="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-primary-600">{{ stats.total_participants }}</p>
-        <p class="text-sm text-gray-500 mt-1">Total Peserta</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-blue-600">{{ stats.total_athletes }}</p>
-        <p class="text-sm text-gray-500 mt-1">Atlet</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-emerald-600">{{ stats.total_students }}</p>
-        <p class="text-sm text-gray-500 mt-1">Siswa PJOK</p>
-      </div>
-      <div class="card text-center">
-        <p class="text-3xl font-bold text-amber-600">{{ stats.total_sessions }}</p>
-        <p class="text-sm text-gray-500 mt-1">Sesi Tes</p>
-      </div>
-    </div>
-
-    <!-- Quick actions -->
-    <div class="flex gap-3 flex-wrap">
+    <PageHeader title="Dashboard" :subtitle="`Ringkasan aktivitas di ${appName}`">
+      <RouterLink to="/sessions/new" class="btn-secondary">+ Sesi Tes Baru</RouterLink>
       <RouterLink to="/participants" class="btn-primary">+ Tambah Peserta</RouterLink>
-      <RouterLink to="/sessions/new"  class="btn-secondary">+ Sesi Tes Baru</RouterLink>
+    </PageHeader>
+
+    <div v-if="loading" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div v-for="i in 4" :key="i" class="card h-28 animate-pulse bg-gray-100" />
     </div>
+
+    <dl v-else-if="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div v-for="item in statItems" :key="item.label" class="card !p-5">
+        <dt class="text-sm text-gray-500">{{ item.label }}</dt>
+        <dd class="mt-2 text-3xl font-bold tracking-tight text-gray-900">{{ stats[item.key] }}</dd>
+      </div>
+    </dl>
 
     <!-- Recent sessions DataTable -->
     <div class="card">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold text-gray-900">Sesi Terbaru</h2>
-        <RouterLink to="/sessions" class="text-sm text-primary-600 hover:underline">Lihat semua →</RouterLink>
+        <h2 class="text-lg font-semibold text-gray-900">Sesi terbaru</h2>
+        <RouterLink to="/sessions" class="act">Lihat semua</RouterLink>
       </div>
 
       <DataTable
         :columns="sessionColumns"
         :data="sessions"
         :loading="loading"
+        :searchable="false"
+        compact
         empty-message="Belum ada sesi tes."
       >
         <template #default="{ rows }">
@@ -102,7 +90,7 @@ onMounted(async () => {
               </span>
             </td>
             <td class="px-4 py-3 text-right">
-              <RouterLink :to="`/sessions/${s.id}`" class="text-xs text-primary-600 hover:underline font-medium">Detail</RouterLink>
+              <RouterLink :to="`/sessions/${s.id}`" class="act act-primary">Detail</RouterLink>
             </td>
           </tr>
         </template>

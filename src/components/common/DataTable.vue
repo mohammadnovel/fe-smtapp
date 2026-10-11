@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import SearchInput from '@/components/common/SearchInput.vue'
 
 export interface DtColumn {
   key: string
@@ -13,7 +14,11 @@ const props = withDefaults(defineProps<{
   data: any[]
   loading?: boolean
   emptyMessage?: string
+  searchable?: boolean
+  compact?: boolean
 }>(), {
+  searchable: true,
+  compact: false,
   loading: false,
   emptyMessage: 'Tidak ada data.',
 })
@@ -79,63 +84,37 @@ function toggleSort(col: DtColumn) {
 
 <template>
   <div class="space-y-3">
-    <!-- Top bar -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-      <div class="flex items-center gap-2 text-sm text-gray-600">
-        <span>Tampilkan</span>
-        <select
-          v-model="perPage"
-          class="rounded border border-gray-300 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option v-for="n in perOptions" :key="n" :value="n">{{ n }}</option>
-        </select>
-        <span>entri</span>
-      </div>
-      <div class="relative">
-        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input
-          v-model="search"
-          type="search"
-          placeholder="Cari..."
-          class="rounded border border-gray-300 py-1.5 pl-8 pr-3 text-sm w-52 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-        />
-      </div>
+    <!-- Search -->
+    <div v-if="searchable" class="toolbar">
+      <SearchInput v-model="search" placeholder="Cari di tabel…" />
     </div>
 
     <!-- Table -->
-    <div class="overflow-x-auto rounded-lg border border-gray-200">
+    <div class="table-wrap">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
             <th
               v-for="col in columns"
               :key="col.key"
-              :class="[
-                'px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider select-none',
-                col.class,
-                col.sortable !== false ? 'cursor-pointer hover:bg-gray-100' : ''
-              ]"
+              :class="['dt-th', col.class, col.sortable !== false ? 'dt-sortable' : '']"
+              :aria-sort="sortKey === col.key ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined"
               @click="toggleSort(col)"
             >
-              <span class="inline-flex items-center gap-1">
+              <span class="inline-flex items-center gap-1.5">
                 {{ col.label }}
-                <span v-if="col.sortable !== false" class="inline-flex flex-col gap-0">
-                  <svg :class="['h-2 w-2', sortKey === col.key && sortDir === 'asc' ? 'text-primary-600' : 'text-gray-300']" fill="currentColor" viewBox="0 0 320 512">
-                    <path d="M279 224H41c-21.4 0-32.1-25.9-17-41L143 64c9.4-9.4 24.6-9.4 33.9 0l119 119c15.2 15.1 4.5 41-16.9 41z"/>
-                  </svg>
-                  <svg :class="['h-2 w-2', sortKey === col.key && sortDir === 'desc' ? 'text-primary-600' : 'text-gray-300']" fill="currentColor" viewBox="0 0 320 512">
-                    <path d="M41 288h238c21.4 0 32.1 25.9 17 41L177 448c-9.4 9.4-24.6 9.4-33.9 0L24 329c-15.1-15.1-4.4-41 17-41z"/>
-                  </svg>
-                </span>
+                <svg v-if="col.sortable !== false" :class="['h-3 w-3', sortKey === col.key ? 'text-primary-600' : 'text-gray-300']" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path v-if="sortKey === col.key && sortDir === 'desc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                  <path v-else-if="sortKey === col.key" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
+                  <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
+                </svg>
               </span>
             </th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-100">
+        <tbody class="divide-y divide-gray-100">
           <tr v-if="loading">
-            <td :colspan="columns.length" class="px-4 py-12 text-center">
+            <td :colspan="columns.length" class="px-4 py-14 text-center">
               <svg class="animate-spin h-6 w-6 text-primary-500 mx-auto" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
@@ -143,8 +122,8 @@ function toggleSort(col: DtColumn) {
             </td>
           </tr>
           <tr v-else-if="rows.length === 0">
-            <td :colspan="columns.length" class="px-4 py-12 text-center text-gray-400 text-sm">
-              {{ search ? `Tidak ada hasil untuk "${search}"` : emptyMessage }}
+            <td :colspan="columns.length" class="px-4 py-14 text-center text-gray-500 text-sm">
+              {{ search ? `Tidak ada hasil untuk "${search}". Coba kata kunci lain.` : emptyMessage }}
             </td>
           </tr>
           <slot v-else :rows="rows" />
@@ -152,31 +131,32 @@ function toggleSort(col: DtColumn) {
       </table>
     </div>
 
-    <!-- Bottom bar -->
-    <div v-if="!loading" class="flex items-center justify-between flex-wrap gap-3">
-      <p class="text-sm text-gray-500">
-        Menampilkan <span class="font-medium text-gray-700">{{ from }}</span>–<span class="font-medium text-gray-700">{{ to }}</span>
-        dari <span class="font-medium text-gray-700">{{ total }}</span> entri
-      </p>
-      <div class="flex items-center gap-1">
-        <button
-          @click="page--"
-          :disabled="page <= 1"
-          :class="['px-3 py-1.5 rounded border text-xs font-medium transition-colors', page <= 1 ? 'bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700']"
-        >Prev</button>
+    <!-- Footer -->
+    <div v-if="!loading" class="flex items-center justify-between flex-wrap gap-3 text-sm text-gray-500">
+      <div class="flex items-center gap-4 flex-wrap">
+        <p>
+          <span class="font-medium text-gray-700">{{ from }}–{{ to }}</span> dari
+          <span class="font-medium text-gray-700">{{ total }}</span>
+        </p>
+        <label v-if="!compact" class="flex items-center gap-2">
+          <span>Baris</span>
+          <select v-model="perPage" class="field-select !py-1 !text-xs">
+            <option v-for="n in perOptions" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </label>
+      </div>
+      <div v-if="lastPage > 1" class="flex items-center gap-1">
+        <button @click="page--" :disabled="page <= 1" class="act disabled:opacity-40 disabled:cursor-not-allowed">Sebelumnya</button>
         <template v-for="p in pageRange" :key="String(p)">
           <button
             v-if="p !== '...'"
             @click="page = p as number"
-            :class="['px-3 py-1.5 rounded border text-xs font-medium transition-colors min-w-[2rem]', p === page ? 'bg-primary-600 border-primary-600 text-white' : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700']"
+            :aria-current="p === page ? 'page' : undefined"
+            :class="['act min-w-[2rem] justify-center', p === page ? '!bg-primary-600 !border-primary-600 !text-white' : '']"
           >{{ p }}</button>
           <span v-else class="px-1 text-gray-400 text-xs self-center">…</span>
         </template>
-        <button
-          @click="page++"
-          :disabled="page >= lastPage"
-          :class="['px-3 py-1.5 rounded border text-xs font-medium transition-colors', page >= lastPage ? 'bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed' : 'bg-white border-gray-300 hover:bg-gray-50 text-gray-700']"
-        >Next</button>
+        <button @click="page++" :disabled="page >= lastPage" class="act disabled:opacity-40 disabled:cursor-not-allowed">Berikutnya</button>
       </div>
     </div>
   </div>
